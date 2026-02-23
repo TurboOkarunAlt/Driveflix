@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamView - Movies & TV</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #141414; color: white; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+        .movie-card { transition: transform 0.3s ease-in-out; }
+        .movie-card:hover { transform: scale(1.1); z-index: 10; }
+        .netflix-gradient { background: linear-gradient(to top, rgba(20,20,20,1) 0%, rgba(20,20,20,0) 100%); }
+        iframe { width: 100%; height: 80vh; border: none; }
+        .hero-vignette { background: linear-gradient(77deg, rgba(0,0,0,.6) 0, rgba(0,0,0,0) 85%); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #141414; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #444; }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+    <nav id="navbar" class="px-4 md:px-12 py-4 flex justify-between items-center fixed top-0 w-full z-50 transition-colors duration-300">
+        <div class="flex items-center gap-8">
+            <h1 class="text-3xl font-extrabold text-[#E50914] tracking-tighter cursor-pointer" onclick="location.reload()">NETFLIX</h1>
+            <div class="hidden md:flex gap-5 text-sm font-light text-gray-200">
+                <a href="#" class="hover:text-gray-400 transition-colors">Home</a>
+                <a href="#" class="hover:text-gray-400 transition-colors">TV Shows</a>
+                <a href="#" class="hover:text-gray-400 transition-colors">Movies</a>
+                <a href="#" class="hover:text-gray-400 transition-colors">New & Popular</a>
+                <a href="#" class="hover:text-gray-400 transition-colors">My List</a>
+            </div>
+        </div>
+        <div class="flex gap-4 items-center">
+            <div class="relative group">
+                <input type="text" id="search" placeholder="Titles, people, genres" class="bg-black/50 border border-white/30 px-9 py-1.5 text-sm focus:outline-none focus:w-64 transition-all duration-300 w-40 rounded-sm">
+                <svg class="w-4 h-4 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            <div class="w-8 h-8 bg-blue-600 rounded-sm"></div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div id="hero" class="relative h-[85vh] w-full hidden">
+        <div class="absolute inset-0">
+            <img id="hero-bg" src="" class="w-full h-full object-cover">
+            <div class="absolute inset-0 hero-vignette"></div>
+            <div class="absolute inset-0 Driveflix-gradient"></div>
+        </div>
+        <div class="relative z-10 flex flex-col justify-end h-full px-4 md:px-12 pb-24 max-w-2xl">
+            <h1 id="hero-title" class="text-4xl md:text-6xl font-bold mb-4 drop-shadow-2xl"></h1>
+            <p id="hero-desc" class="text-lg text-gray-200 mb-6 line-clamp-3 drop-shadow-lg font-light"></p>
+            <div class="flex gap-3">
+                <button id="hero-play-btn" class="flex items-center gap-2 px-8 py-2 bg-white text-black font-bold rounded-md hover:bg-white/90 transition-colors">
+                    <svg class="w-6 h-6 fill-black" viewBox="0 0 24 24"><path d="M6 4l15 8-15 8V4z"/></svg>
+                    Play
+                </button>
+                <button class="flex items-center gap-2 px-8 py-2 bg-gray-500/50 text-white font-bold rounded-md hover:bg-gray-500/40 transition-colors backdrop-blur-md">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    More Info
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <main class="relative z-20 -mt-20 px-4 md:px-12 space-y-12">
+        <div id="player-container" class="hidden bg-black ring-1 ring-white/10 rounded-sm overflow-hidden shadow-2xl">
+            <div class="flex justify-between items-center p-4 bg-zinc-900/90">
+                <h2 id="playing-title" class="text-xl font-medium"></h2>
+                <button onclick="closePlayer()" class="p-2 hover:bg-white/10 rounded-full transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="video-wrapper"></div>
+        </div>
+
+        <div id="search-results-container" class="hidden">
+            <h2 id="grid-title" class="text-xl font-semibold mb-4 text-gray-200 tracking-wide">Search Results</h2>
+            <div id="content-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4"></div>
+        </div>
+
+        <div id="categories-container" class="space-y-12 pb-20">
+            <!-- Dynamic rows will be injected here -->
+        </div>
+    </main>
+
+    <script>
+        const API_KEY = '12477ab771844828f60c62744d68b195';
+        const BASE_URL = 'https://api.themoviedb.org/3';
+        const IMG_URL = 'https://image.tmdb.org/t/p/original';
+        const POSTER_URL = 'https://image.tmdb.org/t/p/w500';
+
+        const CATEGORIES = [
+            { title: 'Trending Now', endpoint: '/trending/all/day' },
+            { title: 'Popular Movies', endpoint: '/movie/popular' },
+            { title: 'Top Rated', endpoint: '/movie/top_rated' },
+            { title: 'Action Movies', endpoint: '/discover/movie?with_genres=28' },
+            { title: 'Comedy Movies', endpoint: '/discover/movie?with_genres=35' },
+            { title: 'Horror Movies', endpoint: '/discover/movie?with_genres=27' },
+            { title: 'Documentaries', endpoint: '/discover/movie?with_genres=99' }
+        ];
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('bg-[#141414]');
+            } else {
+                nav.classList.remove('bg-[#141414]');
+            }
+        });
+
+        async function initApp() {
+            const container = document.getElementById('categories-container');
+            container.innerHTML = '';
+            
+            // Fetch trending for hero
+            const trendingRes = await fetch(`${BASE_URL}/trending/all/day?api_key=${API_KEY}`);
+            const trendingData = await trendingRes.json();
+            if (trendingData.results.length > 0) {
+                setupHero(trendingData.results[0]);
+            }
+
+            // Create horizontal rows for each category
+            for (const cat of CATEGORIES) {
+                const row = document.createElement('div');
+                row.className = 'space-y-4';
+                row.innerHTML = `
+                    <h2 class="text-xl font-semibold text-gray-200 tracking-wide px-1">${cat.title}</h2>
+                    <div class="relative group">
+                        <div id="row-${cat.title.replace(/\s+/g, '-')}" class="flex gap-2 md:gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-4 px-1">
+                            <!-- Cards will be injected here -->
+                        </div>
+                    </div>
+                `;
+                container.appendChild(row);
+                fetchCategory(cat.endpoint, `row-${cat.title.replace(/\s+/g, '-')}`);
+            }
+        }
+
+        async function fetchCategory(endpoint, rowId) {
+            try {
+                const url = `${BASE_URL}${endpoint}${endpoint.includes('?') ? '&' : '?'}api_key=${API_KEY}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                renderRow(data.results, rowId);
+            } catch (err) {
+                console.error('Error fetching category:', err);
+            }
+        }
+
+        function renderRow(results, rowId) {
+            const row = document.getElementById(rowId);
+            row.innerHTML = results.filter(item => item.poster_path).map(item => {
+                const type = item.media_type || (item.title ? 'movie' : 'tv');
+                const title = item.title || item.name;
+                const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+                
+                return `
+                    <div class="movie-card cursor-pointer group relative flex-none w-[140px] md:w-[200px]" onclick="playContent('${type}', ${item.id}, '${title.replace(/'/g, "\\'")}')">
+                        <div class="relative overflow-hidden rounded-sm shadow-md aspect-[2/3]">
+                            <img src="${POSTER_URL}${item.poster_path}" alt="${title}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                <div class="w-10 h-10 border-2 border-white rounded-full flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                                    <svg class="w-5 h-5 fill-white ml-1" viewBox="0 0 24 24"><path d="M6 4l15 8-15 8V4z"/></svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <h3 class="text-[10px] md:text-xs font-bold truncate">${title}</h3>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[8px] md:text-[10px] text-green-500 font-bold">${rating} Rating</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function handleSearch(query) {
+            const categoriesContainer = document.getElementById('categories-container');
+            const searchResultsContainer = document.getElementById('search-results-container');
+            const grid = document.getElementById('content-grid');
+            const hero = document.getElementById('hero');
+
+            if (!query.trim()) {
+                categoriesContainer.classList.remove('hidden');
+                searchResultsContainer.classList.add('hidden');
+                hero.classList.remove('hidden');
+                return;
+            }
+
+            hero.classList.add('hidden');
+            categoriesContainer.classList.add('hidden');
+            searchResultsContainer.classList.remove('hidden');
+            
+            try {
+                const url = `${BASE_URL}/search/multi?query=${encodeURIComponent(query)}&api_key=${API_KEY}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                grid.innerHTML = data.results.filter(item => item.poster_path).map(item => {
+                    const type = item.media_type || (item.title ? 'movie' : 'tv');
+                    const title = item.title || item.name;
+                    const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+                    
+                    return `
+                        <div class="movie-card cursor-pointer group relative" onclick="playContent('${type}', ${item.id}, '${title.replace(/'/g, "\\'")}')">
+                            <div class="relative overflow-hidden rounded-sm shadow-md aspect-[2/3]">
+                                <img src="${POSTER_URL}${item.poster_path}" alt="${title}" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                    <div class="w-12 h-12 border-2 border-white rounded-full flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                                        <svg class="w-6 h-6 fill-white ml-1" viewBox="0 0 24 24"><path d="M6 4l15 8-15 8V4z"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Search error:', err);
+            }
+        }
+
+        function setupHero(movie) {
+            const hero = document.getElementById('hero');
+            const heroBg = document.getElementById('hero-bg');
+            const heroTitle = document.getElementById('hero-title');
+            const heroDesc = document.getElementById('hero-desc');
+            const playBtn = document.getElementById('hero-play-btn');
+
+            hero.classList.remove('hidden');
+            heroBg.src = `${IMG_URL}${movie.backdrop_path}`;
+            heroTitle.textContent = movie.title || movie.name;
+            heroDesc.textContent = movie.overview;
+            
+            const type = movie.media_type || (movie.title ? 'movie' : 'tv');
+            playBtn.onclick = () => playContent(type, movie.id, movie.title || movie.name);
+        }
+
+        function playContent(type, id, title) {
+            const container = document.getElementById('player-container');
+            const wrapper = document.getElementById('video-wrapper');
+            const titleEl = document.getElementById('playing-title');
+            const hero = document.getElementById('hero');
+            const cats = document.getElementById('categories-container');
+            
+            titleEl.textContent = title;
+            container.classList.remove('hidden');
+            hero.classList.add('hidden');
+            cats.classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            const url = type === 'movie' 
+                ? `https://vidlink.pro/movie/${id}` 
+                : `https://vidlink.pro/tv/${id}/1/1`;
+            
+            wrapper.innerHTML = `<iframe src="${url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+        }
+
+        function closePlayer() {
+            document.getElementById('player-container').classList.add('hidden');
+            document.getElementById('video-wrapper').innerHTML = '';
+            document.getElementById('hero').classList.remove('hidden');
+            document.getElementById('categories-container').classList.remove('hidden');
+        }
+
+        document.getElementById('search').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleSearch(e.target.value);
+            }
+        });
+
+        initApp();
+    </script>
+</body>
+</html>
+</body>
+</html>
