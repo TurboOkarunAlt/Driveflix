@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreamView - Movies & TV</title>
+    <title>DriveView - Movies & TV</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #141414; color: white; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
-        .movie-card { transition: transform 0.3s ease-in-out; }
-        .movie-card:hover { transform: scale(1.1); z-index: 10; }
+        .movie-card { transition: transform 0.3s ease-in-out; position: relative; }
+        .movie-card:hover { transform: scale(1.1); z-index: 50; }
         .netflix-gradient { background: linear-gradient(to top, rgba(20,20,20,1) 0%, rgba(20,20,20,0) 100%); }
         iframe { width: 100%; height: 80vh; border: none; }
         .hero-vignette { background: linear-gradient(77deg, rgba(0,0,0,.6) 0, rgba(0,0,0,0) 85%); }
@@ -18,35 +18,99 @@
         ::-webkit-scrollbar-track { background: #141414; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #444; }
+        
+        /* Tooltip style for hover banner */
+        .card-info {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: #181818;
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            display: none;
+            padding: 12px;
+            z-index: 100;
+        }
+        .movie-card:hover .card-info {
+            display: block;
+        }
+        .search-container {
+            transition: all 0.3s ease;
+        }
+        .search-active {
+            background: rgba(0,0,0,0.9);
+            width: 300px !important;
+        }
+        /* Fix for horizontal scroll and vertical clipping */
+        #categories-container {
+            overflow: hidden;
+        }
+        .category-row-wrapper {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        .movie-row {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 2rem 0 4rem 0; /* Extra padding for hover scale */
+            margin-top: -1rem;
+            scroll-behavior: smooth;
+        }
+        .movie-row::-webkit-scrollbar {
+            display: none;
+        }
     </style>
 </head>
 <body class="min-h-screen pb-20">
     <nav id="navbar" class="px-4 md:px-12 py-4 flex justify-between items-center fixed top-0 w-full z-50 transition-colors duration-300">
         <div class="flex items-center gap-8">
-            <h1 class="text-3xl font-extrabold text-[#E50914] tracking-tighter cursor-pointer" onclick="location.reload()">NETFLIX</h1>
+            <h1 class="text-3xl font-extrabold text-[#E50914] tracking-tighter cursor-pointer" onclick="location.reload()">DRIVEFLIX</h1>
             <div class="hidden md:flex gap-5 text-sm font-light text-gray-200">
-                <a href="#" class="hover:text-gray-400 transition-colors">Home</a>
-                <a href="#" class="hover:text-gray-400 transition-colors">TV Shows</a>
-                <a href="#" class="hover:text-gray-400 transition-colors">Movies</a>
+                <a href="#" class="hover:text-gray-400 transition-colors" onclick="location.reload()">Home</a>
+                <a href="#" class="hover:text-gray-400 transition-colors" onclick="showCategory('TV Shows')">TV Shows</a>
+                <a href="#" class="hover:text-gray-400 transition-colors" onclick="showCategory('Movies')">Movies</a>
                 <a href="#" class="hover:text-gray-400 transition-colors">New & Popular</a>
                 <a href="#" class="hover:text-gray-400 transition-colors">My List</a>
             </div>
         </div>
         <div class="flex gap-4 items-center">
-            <div class="relative group">
-                <input type="text" id="search" placeholder="Titles, people, genres" class="bg-black/50 border border-white/30 px-9 py-1.5 text-sm focus:outline-none focus:w-64 transition-all duration-300 w-40 rounded-sm">
-                <svg class="w-4 h-4 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <div class="relative group flex items-center">
+                <div id="search-box" class="flex items-center bg-black/50 border border-white/30 px-3 py-1.5 transition-all duration-300 rounded-sm">
+                    <svg class="w-5 h-5 text-gray-400 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" id="search" placeholder="Titles, people, genres" class="bg-transparent border-none text-sm focus:outline-none ml-2 w-0 group-hover:w-64 focus:w-64 transition-all duration-300">
+                </div>
             </div>
-            <div class="w-8 h-8 bg-blue-600 rounded-sm"></div>
+            <div class="relative group">
+                <div class="w-8 h-8 bg-blue-600 rounded-sm cursor-pointer overflow-hidden">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png" class="w-full h-full object-cover">
+                </div>
+                <div class="absolute right-0 top-full mt-2 w-48 bg-black/95 border border-white/10 rounded-sm shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div class="py-2">
+                        <div class="px-4 py-2 flex items-center gap-3 hover:bg-white/10 cursor-pointer">
+                            <div class="w-6 h-6 bg-green-500 rounded-sm"></div>
+                            <span class="text-xs">Kids</span>
+                        </div>
+                        <div class="px-4 py-2 hover:bg-white/10 cursor-pointer text-xs">Manage Profiles</div>
+                        <hr class="border-white/10 my-2">
+                        <div class="px-4 py-2 hover:bg-white/10 cursor-pointer text-xs">Account</div>
+                        <div class="px-4 py-2 hover:bg-white/10 cursor-pointer text-xs">Help Center</div>
+                        <div class="px-4 py-2 hover:bg-white/10 cursor-pointer text-xs font-bold">Sign out of Driveflix</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <div id="hero" class="relative h-[85vh] w-full hidden">
+    <div id="hero" class="relative h-[85vh] w-full hidden pt-16">
         <div class="absolute inset-0">
             <img id="hero-bg" src="" class="w-full h-full object-cover">
             <div class="absolute inset-0 hero-vignette"></div>
-            <div class="absolute inset-0 Driveflix-gradient"></div>
+            <div class="absolute inset-0 netflix-gradient"></div>
         </div>
         <div class="relative z-10 flex flex-col justify-end h-full px-4 md:px-12 pb-24 max-w-2xl">
             <h1 id="hero-title" class="text-4xl md:text-6xl font-bold mb-4 drop-shadow-2xl"></h1>
@@ -56,7 +120,7 @@
                     <svg class="w-6 h-6 fill-black" viewBox="0 0 24 24"><path d="M6 4l15 8-15 8V4z"/></svg>
                     Play
                 </button>
-                <button class="flex items-center gap-2 px-8 py-2 bg-gray-500/50 text-white font-bold rounded-md hover:bg-gray-500/40 transition-colors backdrop-blur-md">
+                <button id="hero-info-btn" class="flex items-center gap-2 px-8 py-2 bg-gray-500/50 text-white font-bold rounded-md hover:bg-gray-500/40 transition-colors backdrop-blur-md">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     More Info
                 </button>
@@ -64,20 +128,33 @@
         </div>
     </div>
 
-    <main class="relative z-20 -mt-20 px-4 md:px-12 space-y-12">
+    <main class="relative z-20 px-4 md:px-12 space-y-12 pt-20">
         <div id="player-container" class="hidden bg-black ring-1 ring-white/10 rounded-sm overflow-hidden shadow-2xl">
-            <div class="flex justify-between items-center p-4 bg-zinc-900/90">
-                <h2 id="playing-title" class="text-xl font-medium"></h2>
-                <button onclick="closePlayer()" class="p-2 hover:bg-white/10 rounded-full transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+            <div class="flex flex-col bg-zinc-900/90">
+                <div class="flex justify-between items-center p-4">
+                    <h2 id="playing-title" class="text-xl font-medium"></h2>
+                    <button onclick="closePlayer()" class="p-2 hover:bg-white/10 rounded-full transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <!-- Episode Selector for TV Shows -->
+                <div id="series-controls" class="hidden px-4 pb-4 flex gap-4 items-center border-t border-white/5 pt-4">
+                    <div class="flex flex-col">
+                        <label class="text-[10px] text-gray-400 uppercase font-bold mb-1">Season</label>
+                        <select id="season-select" class="bg-zinc-800 text-white text-sm px-3 py-1 rounded border border-white/20 focus:outline-none"></select>
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-[10px] text-gray-400 uppercase font-bold mb-1">Episode</label>
+                        <select id="episode-select" class="bg-zinc-800 text-white text-sm px-3 py-1 rounded border border-white/20 focus:outline-none"></select>
+                    </div>
+                </div>
             </div>
             <div id="video-wrapper"></div>
         </div>
 
         <div id="search-results-container" class="hidden">
-            <h2 id="grid-title" class="text-xl font-semibold mb-4 text-gray-200 tracking-wide">Search Results</h2>
-            <div id="content-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4"></div>
+            <h2 id="grid-title" class="text-xl font-semibold mb-6 text-gray-200 tracking-wide">Search Results</h2>
+            <div id="content-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-16"></div>
         </div>
 
         <div id="categories-container" class="space-y-12 pb-20">
@@ -94,12 +171,15 @@
         const CATEGORIES = [
             { title: 'Trending Now', endpoint: '/trending/all/day' },
             { title: 'Popular Movies', endpoint: '/movie/popular' },
+            { title: 'TV Shows', endpoint: '/tv/popular' },
             { title: 'Top Rated', endpoint: '/movie/top_rated' },
             { title: 'Action Movies', endpoint: '/discover/movie?with_genres=28' },
             { title: 'Comedy Movies', endpoint: '/discover/movie?with_genres=35' },
-            { title: 'Horror Movies', endpoint: '/discover/movie?with_genres=27' },
-            { title: 'Documentaries', endpoint: '/discover/movie?with_genres=99' }
+            { title: 'Horror Movies', endpoint: '/discover/movie?with_genres=27' }
         ];
+
+        let currentShowId = null;
+        let currentShowData = null;
 
         // Navbar scroll effect
         window.addEventListener('scroll', () => {
@@ -124,18 +204,19 @@
 
             // Create horizontal rows for each category
             for (const cat of CATEGORIES) {
+                const rowId = `row-${cat.title.replace(/\s+/g, '-')}`;
                 const row = document.createElement('div');
-                row.className = 'space-y-4';
+                row.className = 'category-row-wrapper';
                 row.innerHTML = `
                     <h2 class="text-xl font-semibold text-gray-200 tracking-wide px-1">${cat.title}</h2>
                     <div class="relative group">
-                        <div id="row-${cat.title.replace(/\s+/g, '-')}" class="flex gap-2 md:gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-4 px-1">
+                        <div id="${rowId}" class="movie-row scrollbar-hide px-1">
                             <!-- Cards will be injected here -->
                         </div>
                     </div>
                 `;
                 container.appendChild(row);
-                fetchCategory(cat.endpoint, `row-${cat.title.replace(/\s+/g, '-')}`);
+                fetchCategory(cat.endpoint, rowId);
             }
         }
 
@@ -156,6 +237,7 @@
                 const type = item.media_type || (item.title ? 'movie' : 'tv');
                 const title = item.title || item.name;
                 const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+                const year = (item.release_date || item.first_air_date || '').split('-')[0];
                 
                 return `
                     <div class="movie-card cursor-pointer group relative flex-none w-[140px] md:w-[200px]" onclick="playContent('${type}', ${item.id}, '${title.replace(/'/g, "\\'")}')">
@@ -167,11 +249,14 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <h3 class="text-[10px] md:text-xs font-bold truncate">${title}</h3>
+                        <div class="card-info group-hover:block transition-all duration-300">
+                            <h3 class="text-xs font-bold truncate">${title}</h3>
                             <div class="flex items-center gap-2 mt-1">
-                                <span class="text-[8px] md:text-[10px] text-green-500 font-bold">${rating} Rating</span>
+                                <span class="text-[10px] text-green-500 font-bold">${rating} Rating</span>
+                                <span class="text-[10px] text-gray-400">${year}</span>
+                                <span class="text-[8px] border border-gray-500 px-1 text-gray-400 uppercase">${type}</span>
                             </div>
+                            <p class="text-[10px] text-gray-300 line-clamp-2 mt-2 font-light">${item.overview}</p>
                         </div>
                     </div>
                 `;
@@ -204,6 +289,7 @@
                     const type = item.media_type || (item.title ? 'movie' : 'tv');
                     const title = item.title || item.name;
                     const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+                    const year = (item.release_date || item.first_air_date || '').split('-')[0];
                     
                     return `
                         <div class="movie-card cursor-pointer group relative" onclick="playContent('${type}', ${item.id}, '${title.replace(/'/g, "\\'")}')">
@@ -214,6 +300,14 @@
                                         <svg class="w-6 h-6 fill-white ml-1" viewBox="0 0 24 24"><path d="M6 4l15 8-15 8V4z"/></svg>
                                     </div>
                                 </div>
+                            </div>
+                            <div class="card-info group-hover:block transition-all duration-300">
+                                <h3 class="text-xs font-bold truncate">${title}</h3>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-[10px] text-green-500 font-bold">${rating} Rating</span>
+                                    <span class="text-[10px] text-gray-400">${year}</span>
+                                </div>
+                                <p class="text-[10px] text-gray-300 line-clamp-2 mt-2 font-light">${item.overview}</p>
                             </div>
                         </div>
                     `;
@@ -229,6 +323,7 @@
             const heroTitle = document.getElementById('hero-title');
             const heroDesc = document.getElementById('hero-desc');
             const playBtn = document.getElementById('hero-play-btn');
+            const infoBtn = document.getElementById('hero-info-btn');
 
             hero.classList.remove('hidden');
             heroBg.src = `${IMG_URL}${movie.backdrop_path}`;
@@ -237,12 +332,18 @@
             
             const type = movie.media_type || (movie.title ? 'movie' : 'tv');
             playBtn.onclick = () => playContent(type, movie.id, movie.title || movie.name);
+            infoBtn.onclick = () => {
+                const rowId = 'row-Trending-Now';
+                const el = document.querySelector(`#${rowId} .movie-card`);
+                if(el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            };
         }
 
-        function playContent(type, id, title) {
+        async function playContent(type, id, title) {
             const container = document.getElementById('player-container');
             const wrapper = document.getElementById('video-wrapper');
             const titleEl = document.getElementById('playing-title');
+            const seriesControls = document.getElementById('series-controls');
             const hero = document.getElementById('hero');
             const cats = document.getElementById('categories-container');
             
@@ -251,11 +352,58 @@
             hero.classList.add('hidden');
             cats.classList.add('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (type === 'tv') {
+                seriesControls.classList.remove('hidden');
+                currentShowId = id;
+                await setupSeriesControls(id);
+            } else {
+                seriesControls.classList.add('hidden');
+                const url = `https://vidlink.pro/movie/${id}`;
+                wrapper.innerHTML = `<iframe src="${url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+            }
+        }
+
+        async function setupSeriesControls(id) {
+            const seasonSelect = document.getElementById('season-select');
+            const episodeSelect = document.getElementById('episode-select');
             
-            const url = type === 'movie' 
-                ? `https://vidlink.pro/movie/${id}` 
-                : `https://vidlink.pro/tv/${id}/1/1`;
+            const res = await fetch(`${BASE_URL}/tv/${id}?api_key=${API_KEY}`);
+            const data = await res.json();
+            currentShowData = data;
+
+            seasonSelect.innerHTML = data.seasons
+                .filter(s => s.season_number > 0)
+                .map(s => `<option value="${s.season_number}">Season ${s.season_number}</option>`)
+                .join('');
+
+            seasonSelect.onchange = (e) => loadEpisodes(id, e.target.value);
+            episodeSelect.onchange = (e) => updatePlayer(id, seasonSelect.value, e.target.value);
+
+            // Load first season and first episode
+            if (data.seasons && data.seasons.length > 0) {
+                const firstSeason = data.seasons.find(s => s.season_number > 0)?.season_number || data.seasons[0].season_number;
+                await loadEpisodes(id, firstSeason);
+            }
+        }
+
+        async function loadEpisodes(id, seasonNum) {
+            const episodeSelect = document.getElementById('episode-select');
+            const res = await fetch(`${BASE_URL}/tv/${id}/season/${seasonNum}?api_key=${API_KEY}`);
+            const data = await res.json();
+
+            episodeSelect.innerHTML = data.episodes
+                .map(e => `<option value="${e.episode_number}">Episode ${e.episode_number}: ${e.name}</option>`)
+                .join('');
             
+            if (data.episodes && data.episodes.length > 0) {
+                updatePlayer(id, seasonNum, data.episodes[0].episode_number);
+            }
+        }
+
+        function updatePlayer(id, season, episode) {
+            const wrapper = document.getElementById('video-wrapper');
+            const url = `https://vidlink.pro/tv/${id}/${season}/${episode}`;
             wrapper.innerHTML = `<iframe src="${url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
         }
 
@@ -264,12 +412,16 @@
             document.getElementById('video-wrapper').innerHTML = '';
             document.getElementById('hero').classList.remove('hidden');
             document.getElementById('categories-container').classList.remove('hidden');
+            document.getElementById('series-controls').classList.add('hidden');
         }
 
-        document.getElementById('search').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
+
+        let searchTimeout;
+        document.getElementById('search').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
                 handleSearch(e.target.value);
-            }
+            }, 500);
         });
 
         initApp();
