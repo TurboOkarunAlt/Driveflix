@@ -3,45 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DriveView - Movies & TV</title>
+    <title>Driveflixw+</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #141414; color: white; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
-        .movie-card { transition: transform 0.3s ease-in-out; position: relative; }
-        .movie-card:hover { transform: scale(1.1); z-index: 50; }
-        .netflix-gradient { background: linear-gradient(to top, rgba(20,20,20,1) 0%, rgba(20,20,20,0) 100%); }
-        iframe { width: 100%; height: 80vh; border: none; }
-        .hero-vignette { background: linear-gradient(77deg, rgba(0,0,0,.6) 0, rgba(0,0,0,0) 85%); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&display=swap');
+        body { background-color: #080808; color: white; font-family: 'Inter', sans-serif; }
+        .movie-card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; max-width: 100%; }
+        .movie-card:hover { transform: scale(1.08); z-index: 50; }
+        .netflix-gradient { background: linear-gradient(to top, #080808 0%, rgba(8,8,8,0) 100%); }
+        iframe { width: 100%; height: 100%; border: none; }
+        .hero-vignette { background: linear-gradient(77deg, rgba(0,0,0,0.8) 0, rgba(0,0,0,0) 60%); }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #141414; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #444; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #080808; }
+        ::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #333; }
         
-        /* Tooltip style for hover banner */
         .card-info {
             position: absolute;
             top: 100%;
             left: 0;
             width: 100%;
-            background: #181818;
-            border-bottom-left-radius: 4px;
-            border-bottom-right-radius: 4px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            background: #121212;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
             display: none;
-            padding: 12px;
+            padding: 16px;
             z-index: 100;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-top: none;
         }
         .movie-card:hover .card-info {
             display: block;
         }
-        .search-container {
-            transition: all 0.3s ease;
+        .glass-nav {
+            background: rgba(8, 8, 8, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
-        .search-active {
-            background: rgba(0,0,0,0.9);
-            width: 300px !important;
+        .btn-primary {
+            background: #E50914;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background: #f40612;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
         }
         /* Fix for horizontal scroll and vertical clipping */
         #categories-container {
@@ -66,39 +83,40 @@
     </style>
 </head>
 <body class="min-h-screen pb-20">
-    <nav id="navbar" class="px-4 md:px-12 py-4 flex justify-between items-center fixed top-0 w-full z-50 transition-colors duration-300">
-        <div class="flex items-center gap-8">
-            <h1 class="text-3xl font-extrabold text-[#E50914] tracking-tighter cursor-pointer" onclick="location.reload()">DRIVEFLIX</h1>
-            <div class="hidden md:flex gap-5 text-sm font-light text-gray-200">
-                <a href="#" class="hover:text-gray-400 transition-colors" onclick="location.reload()">Home</a>
-                <a href="#" class="hover:text-gray-400 transition-colors" onclick="showCategory('TV Shows')">TV Shows</a>
-                <a href="#" class="hover:text-gray-400 transition-colors" onclick="showCategory('Movies')">Movies</a>
-                <a href="#" class="hover:text-gray-400 transition-colors">New & Popular</a>
-                <a href="#" class="hover:text-gray-400 transition-colors">My List</a>
+    <nav id="navbar" class="px-4 md:px-12 py-4 flex justify-between items-center fixed top-0 w-full z-50 transition-all duration-500">
+        <div class="flex items-center gap-10">
+            <h1 class="text-3xl font-black text-[#E50914] tracking-tighter cursor-pointer hover:scale-105 transition-transform" onclick="location.reload()">DRIVEFLIX</h1>
+            <div class="hidden lg:flex gap-6 text-[14px] font-medium text-gray-200">
+                <a href="#" class="text-white hover:text-gray-300 transition-colors" onclick="location.reload()">Home</a>
+                <a href="#" class="hover:text-gray-300 transition-colors" onclick="showCategory('TV Shows')">TV Shows</a>
+                <a href="#" class="hover:text-gray-300 transition-colors" onclick="showCategory('Movies')">Movies</a>
+                <a href="#" class="hover:text-gray-300 transition-colors">New & Popular</a>
+                <a href="#" class="hover:text-gray-300 transition-colors">My List</a>
             </div>
         </div>
-        <div class="flex gap-4 items-center">
+        <div class="flex gap-6 items-center">
             <div class="relative group flex items-center">
-                <div id="search-box" class="flex items-center bg-black/50 border border-white/30 px-3 py-1.5 transition-all duration-300 rounded-sm">
+                <div id="search-box" class="flex items-center bg-black/40 border border-white/20 px-3 py-1.5 transition-all duration-300 rounded-full focus-within:border-white/50 focus-within:bg-black/60">
                     <svg class="w-5 h-5 text-gray-400 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    <input type="text" id="search" placeholder="Titles, people, genres" class="bg-transparent border-none text-sm focus:outline-none ml-2 w-0 group-hover:w-64 focus:w-64 transition-all duration-300">
+                    <input type="text" id="search" placeholder="Titles, people, genres" class="bg-transparent border-none text-sm focus:outline-none ml-2 w-0 lg:group-hover:w-64 focus:w-64 transition-all duration-300 placeholder:text-gray-500">
                 </div>
             </div>
             <div class="relative group">
-                <div class="w-8 h-8 bg-blue-600 rounded-sm cursor-pointer overflow-hidden">
+                <div class="w-8 h-8 rounded-md cursor-pointer overflow-hidden ring-2 ring-transparent group-hover:ring-white/20 transition-all">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png" class="w-full h-full object-cover">
                 </div>
-                <div class="absolute right-0 top-full mt-2 w-48 bg-black/95 border border-white/10 rounded-sm shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div class="absolute right-0 top-full mt-4 w-56 bg-black/95 border border-white/10 rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden backdrop-blur-xl">
                     <div class="py-2">
-                        <div class="px-4 py-2 flex items-center gap-3 hover:bg-white/10 cursor-pointer">
-                            <div class="w-6 h-6 bg-green-500 rounded-sm"></div>
-                            <span class="text-xs">Kids</span>
+                        <div class="px-4 py-3 flex items-center gap-3 hover:bg-white/10 cursor-pointer group/item">
+                            <div class="w-8 h-8 bg-green-500 rounded-md"></div>
+                            <span class="text-sm font-medium">Kids</span>
                         </div>
-                        <div class="px-4 py-2 hover:bg-white/10 cursor-pointer text-xs">Manage Profiles</div>
-                        <hr class="border-white/10 my-2">
-                        <div class="px-4 py-2 hover:bg-white/10 cursor-pointer text-xs">Account</div>
-                        <div class="px-4 py-2 hover:bg-white/10 cursor-pointer text-xs">Help Center</div>
-                        <div class="px-4 py-2 hover:bg-white/10 cursor-pointer text-xs font-bold">Sign out of Driveflix</div>
+                        <div class="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm text-gray-300 hover:text-white transition-colors">Manage Profiles</div>
+                        <div class="h-[1px] bg-white/10 my-2 mx-4"></div>
+                        <div class="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm text-gray-300 hover:text-white transition-colors">Account</div>
+                        <div class="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm text-gray-300 hover:text-white transition-colors">Help Center</div>
+                        <div class="h-[1px] bg-white/10 my-2 mx-4"></div>
+                        <div class="px-4 py-3 hover:bg-white/10 cursor-pointer text-sm font-bold text-center hover:bg-red-600 transition-colors">Sign out of Driveflix</div>
                     </div>
                 </div>
             </div>
@@ -115,12 +133,12 @@
         <div class="relative z-10 flex flex-col justify-end h-full px-4 md:px-12 pb-24 max-w-2xl">
             <h1 id="hero-title" class="text-4xl md:text-6xl font-bold mb-4 drop-shadow-2xl"></h1>
             <p id="hero-desc" class="text-lg text-gray-200 mb-6 line-clamp-3 drop-shadow-lg font-light"></p>
-            <div class="flex gap-3">
-                <button id="hero-play-btn" class="flex items-center gap-2 px-8 py-2 bg-white text-black font-bold rounded-md hover:bg-white/90 transition-colors">
+            <div class="flex gap-4">
+                <button id="hero-play-btn" class="flex items-center gap-3 px-10 py-3 bg-white text-black font-bold rounded-md hover:bg-white/80 transition-all transform active:scale-95 shadow-lg">
                     <svg class="w-6 h-6 fill-black" viewBox="0 0 24 24"><path d="M6 4l15 8-15 8V4z"/></svg>
                     Play
                 </button>
-                <button id="hero-info-btn" class="flex items-center gap-2 px-8 py-2 bg-gray-500/50 text-white font-bold rounded-md hover:bg-gray-500/40 transition-colors backdrop-blur-md">
+                <button id="hero-info-btn" class="flex items-center gap-3 px-10 py-3 bg-gray-500/30 text-white font-bold rounded-md hover:bg-gray-500/50 transition-all transform active:scale-95 backdrop-blur-md shadow-lg border border-white/10">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     More Info
                 </button>
@@ -129,27 +147,54 @@
     </div>
 
     <main class="relative z-20 px-4 md:px-12 space-y-12 pt-20">
-        <div id="player-container" class="hidden bg-black ring-1 ring-white/10 rounded-sm overflow-hidden shadow-2xl">
-            <div class="flex flex-col bg-zinc-900/90">
-                <div class="flex justify-between items-center p-4">
-                    <h2 id="playing-title" class="text-xl font-medium"></h2>
-                    <button onclick="closePlayer()" class="p-2 hover:bg-white/10 rounded-full transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <div id="player-container" class="hidden fixed inset-0 z-[100] bg-black/95 backdrop-blur-3xl overflow-y-auto">
+            <div class="min-h-screen flex flex-col">
+                <!-- Player Header -->
+                <div class="flex justify-between items-center p-6 lg:px-12 bg-gradient-to-b from-black/80 to-transparent">
+                    <div class="flex flex-col">
+                        <h2 id="playing-title" class="text-2xl lg:text-3xl font-black tracking-tight text-white drop-shadow-md"></h2>
+                        <div id="playing-meta" class="flex items-center gap-3 text-sm text-gray-400 mt-1">
+                            <span id="playing-type" class="uppercase tracking-widest text-[10px] border border-white/20 px-2 py-0.5 rounded"></span>
+                            <span id="playing-extra" class="font-medium text-green-500"></span>
+                        </div>
+                    </div>
+                    <button onclick="closePlayer()" class="group p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all transform hover:scale-110 active:scale-90 border border-white/10">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
-                <!-- Episode Selector for TV Shows -->
-                <div id="series-controls" class="hidden px-4 pb-4 flex gap-4 items-center border-t border-white/5 pt-4">
-                    <div class="flex flex-col">
-                        <label class="text-[10px] text-gray-400 uppercase font-bold mb-1">Season</label>
-                        <select id="season-select" class="bg-zinc-800 text-white text-sm px-3 py-1 rounded border border-white/20 focus:outline-none"></select>
+
+                <!-- Video Section -->
+                <div class="flex-1 flex flex-col items-center justify-center p-4 lg:p-8 min-h-0">
+                    <div id="video-wrapper" class="w-full max-w-6xl aspect-video rounded-xl overflow-hidden shadow-[0_0_100px_rgba(229,9,20,0.15)] bg-zinc-900 ring-1 ring-white/10 relative flex-shrink">
+                        <!-- Loading State -->
+                        <div id="player-loader" class="absolute inset-0 flex items-center justify-center bg-zinc-900 z-0">
+                            <div class="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
                     </div>
-                    <div class="flex flex-col">
-                        <label class="text-[10px] text-gray-400 uppercase font-bold mb-1">Episode</label>
-                        <select id="episode-select" class="bg-zinc-800 text-white text-sm px-3 py-1 rounded border border-white/20 focus:outline-none"></select>
+                    
+                    <!-- TV Show Controls -->
+                    <div id="series-controls" class="hidden mt-4 w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md flex-shrink-0">
+                        <div class="flex flex-col gap-2">
+                            <label class="text-xs font-black text-gray-400 uppercase tracking-widest">Select Season</label>
+                            <div class="relative">
+                                <select id="season-select" class="w-full bg-zinc-800/80 text-white text-base px-5 py-3 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-red-600 appearance-none transition-all"></select>
+                                <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label class="text-xs font-black text-gray-400 uppercase tracking-widest">Select Episode</label>
+                            <div class="relative">
+                                <select id="episode-select" class="w-full bg-zinc-800/80 text-white text-base px-5 py-3 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-red-600 appearance-none transition-all"></select>
+                                <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div id="video-wrapper"></div>
         </div>
 
         <div id="search-results-container" class="hidden">
@@ -256,7 +301,7 @@
                                 <span class="text-[10px] text-gray-400">${year}</span>
                                 <span class="text-[8px] border border-gray-500 px-1 text-gray-400 uppercase">${type}</span>
                             </div>
-                            <p class="text-[10px] text-gray-300 line-clamp-2 mt-2 font-light">${item.overview}</p>
+                            <p class="text-[10px] text-gray-300 mt-2 font-light">${item.overview}</p>
                         </div>
                     </div>
                 `;
@@ -307,7 +352,7 @@
                                     <span class="text-[10px] text-green-500 font-bold">${rating} Rating</span>
                                     <span class="text-[10px] text-gray-400">${year}</span>
                                 </div>
-                                <p class="text-[10px] text-gray-300 line-clamp-2 mt-2 font-light">${item.overview}</p>
+                                <p class="text-[10px] text-gray-300 mt-2 font-light">${item.overview}</p>
                             </div>
                         </div>
                     `;
@@ -343,15 +388,16 @@
             const container = document.getElementById('player-container');
             const wrapper = document.getElementById('video-wrapper');
             const titleEl = document.getElementById('playing-title');
+            const typeEl = document.getElementById('playing-type');
+            const extraEl = document.getElementById('playing-extra');
             const seriesControls = document.getElementById('series-controls');
-            const hero = document.getElementById('hero');
-            const cats = document.getElementById('categories-container');
             
             titleEl.textContent = title;
+            if (typeEl) typeEl.textContent = type === 'tv' ? 'TV Series' : 'Movie';
+            if (extraEl) extraEl.textContent = 'Ultra HD 4K';
+            
             container.classList.remove('hidden');
-            hero.classList.add('hidden');
-            cats.classList.add('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.body.style.overflow = 'hidden';
 
             if (type === 'tv') {
                 seriesControls.classList.remove('hidden');
@@ -360,7 +406,7 @@
             } else {
                 seriesControls.classList.add('hidden');
                 const url = `https://vidlink.pro/movie/${id}`;
-                wrapper.innerHTML = `<iframe src="${url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+                wrapper.innerHTML = `<iframe src="${url}" allowfullscreen allow="autoplay; encrypted-media" class="w-full h-full relative z-10 border-none"></iframe>`;
             }
         }
 
@@ -404,18 +450,17 @@
         function updatePlayer(id, season, episode) {
             const wrapper = document.getElementById('video-wrapper');
             const url = `https://vidlink.pro/tv/${id}/${season}/${episode}`;
-            wrapper.innerHTML = `<iframe src="${url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+            wrapper.innerHTML = `<iframe src="${url}" allowfullscreen allow="autoplay; encrypted-media" class="w-full h-full relative z-10 border-none"></iframe>`;
         }
 
         function closePlayer() {
             document.getElementById('player-container').classList.add('hidden');
             document.getElementById('video-wrapper').innerHTML = '';
-            document.getElementById('hero').classList.remove('hidden');
-            document.getElementById('categories-container').classList.remove('hidden');
+            document.body.style.overflow = '';
             document.getElementById('series-controls').classList.add('hidden');
         }
 
-
+        // Live search
         let searchTimeout;
         document.getElementById('search').addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
