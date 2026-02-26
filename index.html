@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Driveflix+</title>
-    <link rel="icon" type="image/png" href="/favicon.png">
+    <title>DriveView - Movies & TV</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&display=swap');
@@ -89,10 +88,10 @@
             <h1 class="text-3xl font-black text-[#E50914] tracking-tighter cursor-pointer hover:scale-105 transition-transform" onclick="location.reload()">DRIVEFLIX</h1>
             <div class="hidden lg:flex gap-6 text-[14px] font-medium text-gray-200">
                 <a href="#" class="text-white hover:text-gray-300 transition-colors" onclick="location.reload()">Home</a>
-                <a href="#" class="hover:text-gray-300 transition-colors" onclick="showCategory('TV Shows')">TV Shows</a>
+                <a href="#" class="hover:text-gray-300 transition-colors" onclick="showCategory('TV Series')">TV Shows</a>
                 <a href="#" class="hover:text-gray-300 transition-colors" onclick="showCategory('Movies')">Movies</a>
-                <a href="#" class="hover:text-gray-300 transition-colors">New & Popular</a>
-                <a href="#" class="hover:text-gray-300 transition-colors">My List</a>
+                <a href="#" class="hover:text-gray-300 transition-colors" onclick="showCategory('Trending Now')">New & Popular</a>
+                <a href="#" class="hover:text-gray-300 transition-colors" onclick="showCategory('Top Rated')">My List</a>
             </div>
         </div>
         <div class="flex gap-6 items-center">
@@ -216,8 +215,8 @@
 
         const CATEGORIES = [
             { title: 'Trending Now', endpoint: '/trending/all/day' },
-            { title: 'Popular Movies', endpoint: '/movie/popular' },
-            { title: 'TV Shows', endpoint: '/tv/popular' },
+            { title: 'Movies', endpoint: '/movie/popular' },
+            { title: 'TV Series', endpoint: '/tv/popular' },
             { title: 'Top Rated', endpoint: '/movie/top_rated' },
             { title: 'Action Movies', endpoint: '/discover/movie?with_genres=28' },
             { title: 'Comedy Movies', endpoint: '/discover/movie?with_genres=35' },
@@ -236,6 +235,64 @@
                 nav.classList.remove('bg-[#141414]');
             }
         });
+
+        async function showCategory(categoryName) {
+            const categoriesContainer = document.getElementById('categories-container');
+            const searchResultsContainer = document.getElementById('search-results-container');
+            const grid = document.getElementById('content-grid');
+            const gridTitle = document.getElementById('grid-title');
+            const hero = document.getElementById('hero');
+            const player = document.getElementById('player-container');
+
+            // Close player if open
+            closePlayer();
+
+            hero.classList.add('hidden');
+            categoriesContainer.classList.add('hidden');
+            searchResultsContainer.classList.remove('hidden');
+            gridTitle.textContent = categoryName;
+            grid.innerHTML = '<div class="col-span-full flex justify-center py-20"><div class="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div></div>';
+
+            const cat = CATEGORIES.find(c => c.title === categoryName) || CATEGORIES[0];
+            
+            try {
+                const url = `${BASE_URL}${cat.endpoint}${cat.endpoint.includes('?') ? '&' : '?'}api_key=${API_KEY}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                grid.innerHTML = data.results.filter(item => item.poster_path).map(item => {
+                    const type = item.media_type || (item.title ? 'movie' : 'tv');
+                    const title = item.title || item.name;
+                    const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+                    const year = (item.release_date || item.first_air_date || '').split('-')[0];
+                    
+                    return `
+                        <div class="movie-card cursor-pointer group relative" onclick="playContent('${type}', ${item.id}, '${title.replace(/'/g, "\\'")}')">
+                            <div class="relative overflow-hidden rounded-sm shadow-md aspect-[2/3]">
+                                <img src="${POSTER_URL}${item.poster_path}" alt="${title}" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                    <div class="w-12 h-12 border-2 border-white rounded-full flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                                        <svg class="w-6 h-6 fill-white ml-1" viewBox="0 0 24 24"><path d="M6 4l15 8-15 8V4z"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-info group-hover:block transition-all duration-300">
+                                <h3 class="text-xs font-bold truncate">${title}</h3>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-[10px] text-green-500 font-bold">${rating} Rating</span>
+                                    <span class="text-[10px] text-gray-400">${year}</span>
+                                    <span class="text-[8px] border border-gray-500 px-1 text-gray-400 uppercase">${type}</span>
+                                </div>
+                                <p class="text-[10px] text-gray-300 mt-2 font-light">${item.overview}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Error loading category:', err);
+                grid.innerHTML = '<p class="col-span-full text-center py-20 text-gray-400">Error loading content. Please try again.</p>';
+            }
+        }
 
         async function initApp() {
             const container = document.getElementById('categories-container');
